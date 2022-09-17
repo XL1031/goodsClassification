@@ -1,0 +1,5 @@
+white 1
+red 1
+rwl 1
+oak 1
+rough 1

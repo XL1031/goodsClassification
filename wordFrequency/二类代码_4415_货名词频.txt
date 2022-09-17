@@ -1,0 +1,17 @@
+wooden 7
+wood 2
+products 2
+rubber 2
+pallets 2
+wrapped 2
+shrink 2
+components 1
+blinds 1
+marked 1
+nr 1
+ot 1
+stc 1
+crates 1
+pa 1
+bedroom 1
+sets 1

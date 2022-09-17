@@ -1,0 +1,4 @@
+kd 1
+lumb 1
+white 1
+oak 1

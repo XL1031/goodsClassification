@@ -1,0 +1,6 @@
+charcoal 6
+bags 5
+wooden 4
+fax 4
+wood 2
+hard 2
