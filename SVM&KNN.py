@@ -5,6 +5,10 @@ import string
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+import matplotlib
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 '''
 把字符串中的标点符号和数字全部转换为空格
 输入：['70% of the wood in this unitco', 'kiln dried poplar lumber', 'basswood kd lumber  ddc is inc', 'newpage flash dried hardwood k', 'wooden chopsticks', 'canvas(wooden frame) contrca t no???', 'wooden box', "plywood 1220mmx2440mmx18mm freight prepaid'", '(ippc 1, plywood 5) parts for', 'usa round logs(douglas fir) 15', '24 logs european beech logs 12', 'spruce logs 93,46cbm 1166pc 14', 'new zealand radiata pine nett']
@@ -75,7 +79,6 @@ def cutStopWords(listOfStr,stopFilePath):
                 wordsInLine.append(word)
         returnWords.append(wordsInLine)
     return returnWords
-
 def dataClean(contentOfEveryLine):
      # 去除标点和数字
      cutPunctuationed = remove_symbols(contentOfEveryLine)
@@ -86,43 +89,74 @@ def dataClean(contentOfEveryLine):
      afterCutStopWords= cutStopWords(afterToken,'stopWords.txt')
      # 升序排序
      return afterCutStopWords
-
 def dataSavedToFile(outFileName,data):
     # 暂时存放元组类型
     with open(outFileName,'w',encoding='utf-8') as f:
         for wordFrequencyTuple in data:
             f.write(" ".join(str(t) for t in wordFrequencyTuple) + '\n') #换行写入，一行写入一个键值对
     f.close()
-
-
 '''
-创造数据集，将经过数据清理后的数据集调整格式，返回值为DataFrame格式的特征df1和标签df2
+创造数据集，将经过数据清理后的数据集调整格式，返回值为DataFrame格式的特征data和标签label
 '''
 def constructDataset(write_path):
-
-    df = pd.read_excel('goodsData.xlsx')
+    df = pd.read_excel(write_path)
     goodsname = df['货名']
-    corpus_list = dataClean(goodsname)#格式list套list   例如[['1','2','3'],['4','5','6']]
-    label_list = df['二类代码']        #格式 dataFrame
-    #corpus_list格式不符合CountVectorizer()，用列表将corpus_list中的数据连接起来，并存入L[],然后将L赋值给新的DataFrame变量df1
+    corpus_df = dataClean(goodsname)#格式list套list   例如[['1','2','3'],['4','5','6']]
+    label_df = df['二类代码']        #格式 dataFrame
+    #corpus_df格式不符合CountVectorizer()，用列表将corpus_df中的数据连接起来，并存入L[],然后将L赋值给新的DataFrame变量data
     L = []
-    for i in corpus_list:
+    for i in corpus_df:
         L.append(" ".join(i))
-    df1= pd.DataFrame(L,columns=['货名'])
-    df2 = label_list
-    df2.columns = '二类代码'
-    return df1, df2
+    data= pd.DataFrame(L,columns=['货名'])
+    label = label_df
+    label.columns = '二类代码'
+    return data, label
+def SVMModel(Data_path):
+    df1, df2 = constructDataset(Data_path)
+    # 特征提取
+    countvec = CountVectorizer()
+    data = countvec.fit_transform(df1["货名"])
+    label = df2
+    # 训练集切分
+    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.2, random_state=40)
+    # 支持向量机
+    SVM_model = SVC()
+    SVM_model.fit(x_train, y_train)
+    # 训练结果
+    print(SVM_model.score(x_test, y_test))
+def KNNModel(Data_path):
+    k = 20  # K的取值范围
+    df1, df2 = constructDataset(Data_path)
+    # 特征提取
+    countvec = CountVectorizer()
+    data = countvec.fit_transform(df1["货名"])
+    label = df2
+    # 训练集切分
+    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.2, random_state=40)
+    #KNN
+    knn_distortions=[]
+    for i in range(1, k, 1):
+        knn_model = KNeighborsClassifier(n_neighbors=i)
+        knn_model.fit(x_train, y_train)
+        print(
+            "-------------------------------------设置K为%d时的分类情况-------------------------------------------" % i)
+        knn_accuracy = knn_model.score(x_test,y_test)
+        print('分类准确率为：', knn_accuracy)
+        knn_distortions.append(knn_accuracy)
+    #画图表示分类准确率随K的增加而变化
+    X, Y = [], []
+    for i in range(1, k):
+         X.append(i)
+         Y = knn_distortions
+    plt.plot(X, Y, '-p', color='grey',
+             marker='o',
+             markersize=8, linewidth=2,
+             markerfacecolor='red',
+             markeredgecolor='grey',
+             markeredgewidth=2)
+    plt.show()
 
 if __name__ == "__main__":
 
-    df1,df2= constructDataset('goodsData.xlsx')
-    #特征提取
-    countvec = CountVectorizer()
-    countvec = countvec.fit_transform(df1["货名"])
-    #训练集切分
-    x_train, x_test, y_train, y_test = train_test_split(countvec, df2, test_size=0.1,random_state=40)
-    model = SVC()  # 支持向量机
-    model.fit(x_train, y_train)
-    #训练结果
-    print(model.score(x_test, y_test))
-
+     #SVMModel('goodsData.xlsx')
+     KNNModel('goodsData.xlsx')
