@@ -4,7 +4,7 @@ import pandas as pd
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC, LinearSVC
+from sklearn.svm import SVC, LinearSVC, NuSVC
 import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.neighbors import KNeighborsClassifier
@@ -96,7 +96,7 @@ def dataSavedToFile(outFileName,data):
             f.write(" ".join(str(t) for t in wordFrequencyTuple) + '\n') #换行写入，一行写入一个键值对
     f.close()
 '''
-创造数据集，将经过数据清理后的数据集调整格式，返回值为DataFrame格式的特征data和标签label
+创造数据集，将经过数据清理后的数据集调整格式，返回值为列表[]格式的特征data和标签label
 '''
 def constructDataset(write_path):
     df = pd.read_excel(write_path)
@@ -108,31 +108,32 @@ def constructDataset(write_path):
     for i in corpus_df:
         L.append(" ".join(i))
     data= pd.DataFrame(L,columns=['货名'])
-    label = label_df
-    label.columns = '二类代码'
-    return data, label
+    label = label_df.to_frame(name='二类代码')
+    return data.values.ravel(), label.values.ravel() #将DataFrame格式转换为一维数组
 def SVMModel(Data_path):
     df1, df2 = constructDataset(Data_path)
     # 特征提取
     countvec = CountVectorizer()
-    data = countvec.fit_transform(df1["货名"])
+    data = countvec.fit_transform(df1)
     label = df2
     # 训练集切分
     x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.1, random_state=40)
     # 支持向量机
-    SVM_model = LinearSVC(max_iter=200000)
+    SVM_model = LinearSVC()
     SVM_model.fit(x_train, y_train)
     # 训练结果
     print(SVM_model.score(x_test, y_test))
+    #LinearSVC 0.9562150055991041
+    #SVC       0.9310190369540874
 def KNNModel(Data_path):
     k = 20  # K的取值范围
     df1, df2 = constructDataset(Data_path)
     # 特征提取
     countvec = CountVectorizer()
-    data = countvec.fit_transform(df1["货名"])
+    data = countvec.fit_transform(df1)
     label = df2
     # 训练集切分
-    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.2, random_state=40)
+    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.1, random_state=40)
     #KNN
     knn_distortions=[]
     for i in range(1, k, 1):
