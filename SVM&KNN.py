@@ -4,7 +4,7 @@ import pandas as pd
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.neighbors import KNeighborsClassifier
@@ -118,9 +118,9 @@ def SVMModel(Data_path):
     data = countvec.fit_transform(df1["货名"])
     label = df2
     # 训练集切分
-    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.2, random_state=40)
+    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.1, random_state=40)
     # 支持向量机
-    SVM_model = SVC()
+    SVM_model = LinearSVC(max_iter=200000)
     SVM_model.fit(x_train, y_train)
     # 训练结果
     print(SVM_model.score(x_test, y_test))
@@ -155,8 +155,6 @@ def KNNModel(Data_path):
              markeredgecolor='grey',
              markeredgewidth=2)
     plt.show()
-
 if __name__ == "__main__":
-
-     #SVMModel('goodsData.xlsx')
-     KNNModel('goodsData.xlsx')
+     SVMModel('goodsData.xlsx')
+     #KNNModel('goodsData.xlsx')
