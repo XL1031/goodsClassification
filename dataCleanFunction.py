@@ -136,7 +136,7 @@ def dataCleanAndStatisticsWordFrequency(contentOfEveryLine):
      # 去除停用词，统计词频
      afterCutStopWords,wordsFrequency = cutStopWords(afterToken,'data/stopWords.txt')
      # 升序排序
-     return sorted(wordsFrequency.items(),key=lambda x:x[1],reverse=True)
+     return afterCutStopWords,sorted(wordsFrequency.items(),key=lambda x:x[1],reverse=True)
 def dataSavedToFile(outFileName,data):
     # 暂时存放元组类型
     with open(outFileName,'w',encoding='utf-8') as f:
@@ -149,21 +149,23 @@ excelPath：excel文件路径
 columnName：列名
 targetColumn：要获取的目标列
 classCode：对应列名的分类代码，如果不指明该参数，则默认使用All，即获取所有columnName的分类代码当作classCode
+dataContent:去除标点、数字、停用词之后的文档内容，dataContent没有用处，添加的原因是在向量化的时候需要数据清理。
+wordFrequency:排序之后的单词频率
 '''
 def dataOfOneOrAllClassCodeSavedToFile(excelPath,columnName,targetColumn,classCode='All'):
     codeMapTargetData = getAllGoodsNameOfTheColumnWithClassCode(excelPath,columnName,targetColumn,classCode)
     if classCode=="All":
         outFileName = columnName +"_所有"+columnName+"_"+targetColumn+"词频.txt"
-        returnData = dataCleanAndStatisticsWordFrequency(codeMapTargetData.get('All'))
+        dataContent,wordFrequency= dataCleanAndStatisticsWordFrequency(codeMapTargetData.get('All'))
     else:
         outFileName = columnName+"_"+str(classCode)+"_"+targetColumn+"词频.txt"
-        returnData = dataCleanAndStatisticsWordFrequency(codeMapTargetData.get(classCode))
+        dataContent,wordFrequency = dataCleanAndStatisticsWordFrequency(codeMapTargetData.get(classCode))
     # 接下来输出至文件，文件名为：columnName_classCode_targetColumn
-    dataSavedToFile(outFileName,returnData)
-if __name__ == "__main__":
-    df = pd.read_excel('data/goodsData.xlsx')
-    twoClassCodeList = df['二类代码'].unique()
-    for code in twoClassCodeList:
-         dataOfOneOrAllClassCodeSavedToFile('data/goodsData.xlsx','二类代码','货名',code)
-    dataOfOneOrAllClassCodeSavedToFile('data/goodsData.xlsx','二类代码','货名','All')
+    dataSavedToFile(outFileName,wordFrequency)
+# if __name__ == "__main__":
+    # df = pd.read_excel('data/goodsData.xlsx')
+    # twoClassCodeList = df['二类代码'].unique()
+    # for code in twoClassCodeList:
+    #      dataOfOneOrAllClassCodeSavedToFile('data/test.xlsx','二类代码','货名',code)
+    # dataOfOneOrAllClassCodeSavedToFile('data/test.xlsx','二类代码','货名','All')
 
