@@ -2,3 +2,6 @@
 /data/test.xlsx
 /.idea*
 /.git*
+.ipynb_checkpoints/
+__pycache__/
+
