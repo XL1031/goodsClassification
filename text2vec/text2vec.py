@@ -32,7 +32,7 @@ class text2vec():
         # CAREFUL: For small corpus please carefully modify the parameters for filter_extremes, or simply comment it out.
         # no_lelow控制下限，即至少在no_below个文档中出现的词被保留
         # no_above控制上限，即出现在超过总文档*no_above数量的词被删除
-        docs_dict.filter_extremes(no_below=1, no_above=1)
+        docs_dict.filter_extremes(no_below=2, no_above=1)
         docs_dict.compactify()
         return docs_dict
 

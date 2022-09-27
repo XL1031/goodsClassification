@@ -6,6 +6,7 @@
 3、把测试数据在训练数据的背景下转化为向量空间，即假设我们已经知道测试数据是木材类，直接在木材类数据的tf-itf模型下生成向量，把每一行的测试数据
 分别和训练数据的平均矩阵使用余弦相似度计算，结果越高则准确率越高
 关键参数：text2vec/text2vec中的_get_docs_dict函数中的过滤函数，保留至少出现no_below次的单词，删除超过在no_above个文档中出现的单词
+bobelow:1,no_above:1 precision: 63%
 '''
 import numpy as np
 from text2vec import text2vec
@@ -98,10 +99,9 @@ if __name__ == "__main__":
             # 测试集占比20%
             test_data_Map[key], train_data_Map[key] = data_split(data.get(key), 0.2, True)
     # 划分完训练集和测试集之后，把训练集每一类数据组合起来，传入向量空间
-    allDataList = []
+    allDataContent = []
     for key in train_data_Map:
-        allDataList.append(train_data_Map.get(key))
-    allDataContent = list2str(allDataList)
+        allDataContent.extend(train_data_Map.get(key))
     # allData数据清理
     allDataCutStopWords, wordFrequency = dataCleanAndStatisticsWordFrequency(allDataContent)
     allContent = list2str(allDataCutStopWords)
