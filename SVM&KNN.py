@@ -4,46 +4,64 @@ from sklearn.svm import SVC, LinearSVC, NuSVC
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from dataCleanFunction import *
+from tf_itfModel import data_split, list2str
+
 '''
 创造数据集，将经过数据清理后的数据集调整格式，返回值为DataFrame格式的特征df1和标签df2
 *********这样构造数据集不正确，划分的是整个数据集，不是每个分类的数据集，会造成数据不平衡、预测不准确
+修改后的代码按照‘二类代码’划分数据集和测试集
 '''
-def constructDataset(write_path):
-    df = pd.read_excel(write_path)
-    goodsname = df['货名']
-    corpus_df,wordFrequency= dataCleanAndStatisticsWordFrequency(goodsname)#格式list套list   例如[['1','2','3'],['4','5','6']]
-    label_df = df['二类代码']        #格式 dataFrame
-    #corpus_df格式不符合CountVectorizer()，用列表将corpus_df中的数据连接起来，并存入L[],然后将L赋值给新的DataFrame变量data
-    L = []
-    for i in corpus_df:
-        L.append(" ".join(i))
-    data= pd.DataFrame(L,columns=['货名'])
-    label = label_df.to_frame(name='二类代码')
-    return data.values.ravel(), label.values.ravel() #将DataFrame格式转换为一维数组
-def SVMModel(Data_path):
-    df1, df2 = constructDataset(Data_path)
+def constructDataset(write_path,columnName,targetColumn,classCode):
+    # 读取数据
+    data = getAllGoodsNameOfTheColumnWithClassCode('data/test.xlsx', '二类代码', '货名', 'All')
+    # 划分训练集和测试集
+    train_data_Map = {}
+    test_data_Map = {}
+    for key in data.keys():
+        if key != 'All':
+            # 测试集占比20%
+            test_data_Map[key], train_data_Map[key] = data_split(data.get(key), 0.2, True)
+    # 划分完训练集和测试集之后，把训练集每一类数据组合起来
+    trainDataList = []
+    trainLabelList = []
+    testDataList  = []
+    testLabelList = []
+    for key,value in train_data_Map.items():
+        for line in value:
+            trainLabelList.append(key)
+            trainDataList.append(line)
+    for key,value in test_data_Map.items():
+        for line in value:
+            testLabelList.append(key)
+            testDataList.append(line)
+    # 数据清理
+    trainDataCutStopWords, wordFrequency = dataCleanAndStatisticsWordFrequency(trainDataList)
+    testDataCutStopWords, wordFrequency  = dataCleanAndStatisticsWordFrequency(testDataList)
+    return trainDataList,trainLabelList,testDataList,testLabelList
+
+def SVMModel(Data_path,columnName,targetColumn,classCode):
+    l1, l2, l3, l4 = constructDataset(Data_path,columnName,targetColumn,classCode)
     # 特征提取
     countvec = CountVectorizer()
-    data = countvec.fit_transform(df1)
-    label = df2
-    # 训练集切分
-    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.1, random_state=40)
-    # 支持向量机
-    SVM_model = LinearSVC()
+    x_train = countvec.fit_transform(l1)
+    y_train = l2
+    x_test = countvec.transform(l3)
+    y_test = l4
+    SVM_model = LinearSVC(max_iter=200000)
     SVM_model.fit(x_train, y_train)
     # 训练结果
     print(SVM_model.score(x_test, y_test))
-    #LinearSVC 0.9562150055991041
-    #SVC       0.9310190369540874
-def KNNModel(Data_path):
+    #LinearSVC 0.9526050420168067
+    #SVC       0.9225770308123249
+def KNNModel(Data_path,columnName,targetColumn,classCode):
     k = 20  # K的取值范围
-    df1, df2 = constructDataset(Data_path)
+    l1, l2, l3, l4 = constructDataset(Data_path,columnName,targetColumn,classCode)
     # 特征提取
     countvec = CountVectorizer()
-    data = countvec.fit_transform(df1)
-    label = df2
-    # 训练集切分
-    x_train, x_test, y_train, y_test = train_test_split(data, label, test_size=0.1, random_state=40)
+    x_train = countvec.fit_transform(l1)
+    y_train = l2
+    x_test = countvec.transform(l3)
+    y_test = l4
     #KNN
     knn_distortions=[]
     for i in range(1, k, 1):
@@ -61,5 +79,5 @@ def KNNModel(Data_path):
     plt.plot(X, Y, '-p', color='grey', marker='o', markersize=8, linewidth=2, markerfacecolor='red', markeredgecolor='grey', markeredgewidth=2)
     plt.show()
 if __name__ == "__main__":
-    #SVMModel('data/test.xlsx')
-    KNNModel('data/test.xlsx')
+    SVMModel('data/test.xlsx','货名','二类代码','All')
+    #KNNModel('data/test.xlsx','货名','二类代码','All')
