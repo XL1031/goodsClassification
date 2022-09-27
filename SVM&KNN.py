@@ -22,7 +22,6 @@ def constructDataset(write_path,columnName,targetColumn,classCode):
             # 测试集占比20%
             test_data_Map[key], train_data_Map[key] = data_split(data.get(key), 0.2, True)
     # 划分完训练集和测试集之后，把训练集每一类数据组合起来
-
     trainDataList = []
     trainLabelList = []
     testDataList  = []
@@ -38,10 +37,7 @@ def constructDataset(write_path,columnName,targetColumn,classCode):
     # 数据清理
     trainDataCutStopWords, wordFrequency = dataCleanAndStatisticsWordFrequency(trainDataList)
     testDataCutStopWords, wordFrequency  = dataCleanAndStatisticsWordFrequency(testDataList)
-
-    print(testLabelList)
     return trainDataList,trainLabelList,testDataList,testLabelList
-
 
 def SVMModel(Data_path,columnName,targetColumn,classCode):
     l1, l2, l3, l4 = constructDataset(Data_path,columnName,targetColumn,classCode)
