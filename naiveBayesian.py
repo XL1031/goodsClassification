@@ -1,9 +1,11 @@
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from dataCleanFunction import *
-import random
+from sklearn.naive_bayes import BernoulliNB
+# from dataCleanFunction import *
+# import random
 from tf_itfModel import *
+from sklearn.metrics import recall_score
 def dataTranslate(dataMap):
     '''
    把字典数据转化为列表
@@ -43,9 +45,29 @@ def dataClean(dataList):
     dataCutStopWords, wordFrequency = dataCleanAndStatisticsWordFrequency(dataList)
     dataContent = list2str(dataCutStopWords)
     return dataContent
+def dataBalence(data,num):
+    '''
+    数据平衡策略，把小于500条的数据重复到500条
+    :param data:
+    :return:添加重复数据之后的data
+    '''
+    balencedData = {}
+    for key in data.keys():
+        if key != 'All':
+            length = len(data.get(key))
+            if length < num:
+                freq = int(num/length)
+                contentList = data.get(key)
+                newContent = []
+                for i in range(freq):
+                    newContent.extend(contentList)
+                balencedData[key] = newContent
+    return balencedData
 if __name__ == "__main__":
     # 读取数据
     data = getAllGoodsNameOfTheColumnWithClassCode('data/test.xlsx', '二类代码', '货名', 'All')
+    # 数据平衡，把样本数量小于500条的数据进行重复，把数据重复500/样本数量次，把数据量升高到500
+    data = dataBalence(data,500)
     # 划分训练集和测试集
     trainList,trainLabel,testList,testLabel = dataSetSplit(data)
     # 数据清理
@@ -60,11 +82,14 @@ if __name__ == "__main__":
     # 获取训练集合tf-itf矩阵
     train_tfidf = TfidfTransformer(use_idf=False).fit_transform(trainVectorMatrix)
     # print(train_tfidf)
-    # 训练贝叶斯模型
-    MUB = MultinomialNB().fit(train_tfidf, trainLabel)
+    # 训练贝叶斯模型，多项式和伯努利
+    # MUB = MultinomialNB().fit(train_tfidf, trainLabel)
+    MUB = BernoulliNB().fit(train_tfidf, trainLabel)
     # 测试贝叶斯模型
     testVector = count_vector.transform(testList)  # 得到测试集的词频矩阵
     # 用transformer.fit_transform(词频矩阵)得到TF权重矩阵
     test_tfidf = TfidfTransformer(use_idf=False).fit_transform(testVector)
+    predict = MUB.predict(test_tfidf)
     print(MUB.score(test_tfidf, testLabel))
+    print(recall_score(testLabel, predict, average='macro'))
 
