@@ -11,29 +11,39 @@ from tf_itfModel import data_split, list2str
 *********这样构造数据集不正确，划分的是整个数据集，不是每个分类的数据集，会造成数据不平衡、预测不准确
 修改后的代码按照‘二类代码’划分数据集和测试集
 '''
-def constructDataset(write_path,columnName,targetColumn,classCode):
+def constructDataset(write_path,columnName,targetColumn,classCode,labellist=[]):
     # 读取数据
     data = getAllGoodsNameOfTheColumnWithClassCode('data/test.xlsx', '二类代码', '货名', 'All')
     # 划分训练集和测试集
     train_data_Map = {}
     test_data_Map = {}
     for key in data.keys():
-        if key != 'All':
-            # 测试集占比20%
-            test_data_Map[key], train_data_Map[key] = data_split(data.get(key), 0.2, True)
+         if key != 'All':
+            # 测试集占比50%
+            test_data_Map[key], train_data_Map[key] = data_split(data.get(key), 0.2, shuffle=True)
     # 划分完训练集和测试集之后，把训练集每一类数据组合起来
     trainDataList = []
     trainLabelList = []
     testDataList  = []
     testLabelList = []
-    for key,value in train_data_Map.items():
-        for line in value:
-            trainLabelList.append(key)
-            trainDataList.append(line)
-    for key,value in test_data_Map.items():
-        for line in value:
-            testLabelList.append(key)
-            testDataList.append(line)
+    if (labellist != []):
+        for key,value in train_data_Map.items():
+            for line in value:
+                trainLabelList.append(labellist.index(key.astype(str).rstrip()))
+                trainDataList.append(line)
+        for key,value in test_data_Map.items():
+            for line in value:
+                testLabelList.append(labellist.index(key.astype(str).rstrip()))
+                testDataList.append(line)
+    else:
+        for key,value in train_data_Map.items():
+            for line in value:
+                trainLabelList.append(key)
+                trainDataList.append(line)
+        for key,value in test_data_Map.items():
+            for line in value:
+                testLabelList.append(key)
+                testDataList.append(line)
     # 数据清理
     trainDataCutStopWords, wordFrequency = dataCleanAndStatisticsWordFrequency(trainDataList)
     testDataCutStopWords, wordFrequency  = dataCleanAndStatisticsWordFrequency(testDataList)
